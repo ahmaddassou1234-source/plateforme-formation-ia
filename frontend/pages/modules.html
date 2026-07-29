@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogue — Formation en IA</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="fr-header">
+        <div class="fr-container fr-header__body">
+            <div class="fr-header__brand"><img src="../img/logo-menps.png" alt="Ministère de l'Éducation Nationale, du Préscolaire et des Sports" class="menps-logo"><div class="fr-header__service"><p class="fr-header__service-title">Formation en IA</p></div></div>
+            <div class="fr-header__tools"><div id="user-menu"><span id="user-name"></span><button onclick="logout()" class="fr-btn fr-btn--tertiary">Déconnexion</button></div></div>
+        </div>
+        <nav class="fr-nav"><div class="fr-container"><ul class="fr-nav__list">
+            <li><a class="fr-nav__link" href="../index.html">Accueil</a></li>
+            <li><a class="fr-nav__link fr-nav__link--active" href="modules.html">Catalogue</a></li>
+            <li><a class="fr-nav__link" href="progression.html">Ma progression</a></li>
+            <li><a class="fr-nav__link" href="mini-formation.html">Mini-formations</a></li>
+        </ul></div></nav>
+    </header>
+
+    <main class="fr-container fr-py-6w">
+        <h1 style="color:var(--blue-france);margin-bottom:2rem">Catalogue des formations</h1>
+        <div class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+            <div class="fr-col-12 fr-col-md-4">
+                <select id="filter-niveau" class="fr-select" onchange="loadModules()">
+                    <option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option>
+                </select>
+            </div>
+            <div class="fr-col-12 fr-col-md-8">
+                <input type="text" id="search" class="fr-input" placeholder="Rechercher un module..." oninput="loadModules()">
+            </div>
+        </div>
+        <div id="modules-list" class="fr-grid-row fr-grid-row--gutters"></div>
+    </main>
+
+    <script src="../js/app.js"></script>
+    <script>
+        requireAuth(); updateHeader();
+        async function loadModules() {
+            const niveau = document.getElementById('filter-niveau').value;
+            const search = document.getElementById('search').value;
+            let url = '/modules?'; if(niveau) url+=`niveau=${niveau}&`; if(search) url+=`search=${encodeURIComponent(search)}`;
+            try {
+                const modules = await api(url);
+                const container = document.getElementById('modules-list');
+                if(modules.length===0){ container.innerHTML='<div class="fr-col-12"><p class="fr-text--center">Aucun module trouvé.</p></div>'; return; }
+                container.innerHTML = modules.map(m => {
+                    const prog = m.progression || {statut:'Non commencé', pourcentageAvancement:0};
+                    let sb=''; if(prog.statut==='Terminé') sb='<span class="fr-badge fr-badge--success">Terminé</span>'; else if(prog.statut==='En cours') sb='<span class="fr-badge">En cours</span>'; else sb='<span class="fr-badge" style="background:var(--grey-950);color:var(--grey-200)">Non commencé</span>';
+                    return `<div class="fr-col-12 fr-col-md-6"><div class="fr-card"><div class="fr-card__body">
+                        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.75rem"><span class="fr-badge">${m.niveau}</span>${sb}</div>
+                        ${m.estMiniFormation?'<span class="fr-badge fr-badge--mini fr-mb-2w">Mini-formation</span>':''}
+                        <h3 class="fr-card__title">${m.titre}</h3>
+                        <p class="fr-card__desc">${m.description||''}</p>
+                        <p style="font-size:0.875rem;color:var(--grey-200);margin-top:0.5rem">Thème : ${m.theme} • Durée : ${m.duree} min</p>
+                        <a href="module-detail.html?id=${m.id}" class="fr-btn" style="margin-top:1rem">${prog.statut==='Non commencé'?'Commencer':'Continuer'}</a>
+                    </div></div></div>`;
+                }).join('');
+            } catch(e){ console.error(e); }
+        }
+        loadModules();
+    </script>
+</body>
+</html>

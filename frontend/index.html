@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plateforme de Formation IA — Ministère de l'Éducation Nationale, du Préscolaire et des Sports</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇲🇦</text></svg>">
+</head>
+<body>
+    <header class="fr-header">
+        <div class="fr-header__body">
+            <div class="fr-container">
+                <div class="fr-header__body-row">
+                    <div class="fr-header__brand">
+                        <img src="img/logo-menps.png" alt="Ministère de l'Éducation Nationale, du Préscolaire et des Sports" class="menps-logo">
+                        <div class="fr-header__service">
+                            <p class="fr-header__service-title">Formation en IA</p>
+                            <p class="fr-header__service-tagline">Ministère de l'Éducation Nationale, du Préscolaire et des Sports (MENPS)</p>
+                        </div>
+                    </div>
+                    <div class="fr-header__tools">
+                        <div id="auth-buttons">
+                            <a href="pages/login.html" class="fr-btn fr-btn--secondary">Se connecter</a>
+                        </div>
+                        <div id="user-menu" class="hidden">
+                            <span id="user-name"></span>
+                            <button onclick="logout()" class="fr-btn fr-btn--tertiary">Déconnexion</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav class="fr-nav">
+            <div class="fr-container">
+                <ul class="fr-nav__list">
+                    <li><a class="fr-nav__link" href="index.html">Accueil</a></li>
+                    <li><a class="fr-nav__link" href="pages/modules.html">Catalogue</a></li>
+                    <li><a class="fr-nav__link" href="pages/progression.html">Ma progression</a></li>
+                    <li id="nav-admin-link" class="hidden"><a class="fr-nav__link" href="pages/admin.html">Administration</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="fr-container fr-py-6w">
+        <section class="fr-hero">
+            <div class="fr-hero__content">
+                <h1>Former les enseignants à l'intelligence artificielle</h1>
+                <p class="fr-text--lead">
+                    Plateforme officielle du MENPS, réalisée avec l'appui de l'UNESCO, dédiée à la montée en compétences
+                    en intelligence artificielle des enseignants du Royaume du Maroc.
+                </p>
+                <a href="pages/modules.html" class="fr-btn fr-btn--lg">Consulter le catalogue</a>
+            </div>
+        </section>
+
+        <section class="fr-grid-row fr-grid-row--gutters fr-mt-6w">
+            <div class="fr-col-12 fr-col-md-4">
+                <div class="fr-card fr-enlarge-link">
+                    <div class="fr-card__body">
+                        <h2 class="fr-card__title">Modules certifiants</h2>
+                        <p class="fr-card__desc">Parcourez des parcours structurés du niveau débutant à avancé.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="fr-col-12 fr-col-md-4">
+                <div class="fr-card fr-enlarge-link">
+                    <div class="fr-card__body">
+                        <h2 class="fr-card__title">Quiz interactifs</h2>
+                        <p class="fr-card__desc">Validez vos acquis et obtenez des badges officiels.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="fr-col-12 fr-col-md-4">
+                <div class="fr-card fr-enlarge-link">
+                    <div class="fr-card__body">
+                        <h2 class="fr-card__title">Ressources téléchargeables</h2>
+                        <p class="fr-card__desc">Guides, modèles et chartes pour une utilisation éthique de l'IA.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            updateHeader();
+        });
+    </script>
+</body>
+</html>

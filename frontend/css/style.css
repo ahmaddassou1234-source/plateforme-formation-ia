@@ -1,0 +1,176 @@
+/* === DESIGN — MINISTÈRE DE L'ÉDUCATION NATIONALE, DU PRÉSCOLAIRE ET DES SPORTS (MENPS) === */
+:root {
+    --blue-france: #1B3A6B;       /* bleu marine institutionnel (MENPS) */
+    --blue-france-975: #F2F5FA;
+    --blue-france-950: #E7EEF9;
+    --gold-menps: #C9A227;        /* doré (accent MENPS) */
+    --grey-1000: #ffffff;
+    --grey-975: #F7F5F0;
+    --grey-950: #EEEEEE;
+    --grey-200: #3a3a3a;
+    --grey-100: #0F2340;          /* bleu marine profond */
+    --success: #3B6D11;
+    --error: #9E1B32;
+    --info: #1B3A6B;
+    --warning: #b34000;
+    --radius: 8px;
+    --shadow: 0 4px 12px rgba(15,35,64,0.10);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    background-color: var(--grey-975);
+    color: var(--grey-100);
+    line-height: 1.6;
+}
+
+.fr-container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+
+/* HEADER */
+.fr-header { background: #fff; border-bottom: 2px solid var(--blue-france); }
+.fr-header__body { padding: 1rem 0; }
+.fr-header__body-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.fr-header__brand { display: flex; align-items: center; gap: 1.5rem; }
+.fr-logo { display: inline-block; padding: 0.5rem 1rem; border-right: 1px solid var(--grey-950); }
+.fr-logo__title { font-size: 0.875rem; font-weight: 700; color: var(--blue-france); line-height: 1.3; text-transform: uppercase; letter-spacing: 0.05em; }
+.fr-header__service-title { font-size: 1.25rem; font-weight: 700; color: var(--blue-france); }
+.fr-header__service-tagline { font-size: 0.875rem; color: var(--grey-200); }
+
+/* NAVIGATION */
+.fr-nav { background: var(--blue-france); }
+.fr-nav__list { display: flex; list-style: none; gap: 0.5rem; padding: 0; }
+.fr-nav__link { display: block; padding: 1rem 1.25rem; color: #fff; text-decoration: none; font-weight: 500; font-size: 0.95rem; transition: background 0.2s; }
+.fr-nav__link:hover { background: rgba(255,255,255,0.15); }
+.fr-nav__link--active { background: rgba(255,255,255,0.2); font-weight: 700; }
+
+/* BOUTONS */
+.fr-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.625rem 1.5rem; font-size: 1rem; font-weight: 500; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; background: var(--blue-france); color: #fff; }
+.fr-btn:hover { background: #1212ff; }
+.fr-btn--secondary { background: transparent; color: var(--blue-france); border-color: var(--blue-france); }
+.fr-btn--secondary:hover { background: var(--blue-france-975); }
+.fr-btn--tertiary { background: transparent; color: var(--grey-200); border-color: var(--grey-950); font-size: 0.875rem; padding: 0.5rem 1rem; }
+.fr-btn--lg { padding: 0.875rem 2rem; font-size: 1.125rem; }
+
+/* HERO */
+.fr-hero { background: var(--blue-france-975); padding: 3rem 2rem; border-left: 4px solid var(--blue-france); margin-bottom: 2rem; }
+.fr-hero h1 { font-size: 2rem; color: var(--blue-france); margin-bottom: 1rem; font-weight: 700; }
+.fr-text--lead { font-size: 1.25rem; color: var(--grey-200); margin-bottom: 2rem; max-width: 700px; }
+
+/* GRID */
+.fr-grid-row { display: flex; flex-wrap: wrap; margin: -0.75rem; }
+.fr-grid-row--gutters > * { padding: 0.75rem; }
+.fr-col-12 { flex: 0 0 100%; max-width: 100%; }
+@media (min-width: 768px) {
+    .fr-col-md-3 { flex: 0 0 25%; max-width: 25%; }
+    .fr-col-md-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+    .fr-col-md-6 { flex: 0 0 50%; max-width: 50%; }
+    .fr-col-md-8 { flex: 0 0 66.666%; max-width: 66.666%; }
+}
+
+/* CARDS */
+.fr-card { background: #fff; border: 1px solid var(--grey-950); height: 100%; transition: box-shadow 0.2s; }
+.fr-card:hover { box-shadow: var(--shadow); }
+.fr-card__body { padding: 1.5rem; }
+.fr-card__title { font-size: 1.125rem; color: var(--blue-france); margin-bottom: 0.5rem; }
+.fr-card__desc { color: var(--grey-200); font-size: 0.95rem; }
+
+/* FORMS */
+.fr-form-group { margin-bottom: 1.5rem; }
+.fr-label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--grey-100); }
+.fr-input, .fr-select { width: 100%; padding: 0.625rem 1rem; border: 1px solid var(--grey-950); font-size: 1rem; font-family: inherit; background: #fff; }
+.fr-input:focus, .fr-select:focus { outline: 2px solid var(--blue-france); outline-offset: 2px; }
+
+/* TABLES */
+.fr-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 0.95rem; }
+.fr-table th { background: var(--blue-france-950); color: var(--blue-france); text-align: left; padding: 1rem; font-weight: 600; border-bottom: 2px solid var(--blue-france); }
+.fr-table td { padding: 1rem; border-bottom: 1px solid var(--grey-950); }
+
+/* ALERTS */
+.fr-alert { padding: 1rem 1.25rem; margin-bottom: 1rem; border-left: 4px solid; }
+.fr-alert--success { background: #e7f5ef; border-color: var(--success); color: var(--success); }
+.fr-alert--error { background: #fff5f5; border-color: var(--error); color: var(--error); }
+.fr-alert--info { background: var(--blue-france-975); border-color: var(--info); color: var(--info); }
+
+/* BADGES */
+.fr-badge { display: inline-block; padding: 0.25rem 0.75rem; font-size: 0.875rem; font-weight: 500; background: var(--blue-france-950); color: var(--blue-france); }
+.fr-badge--success { background: #e7f5ef; color: var(--success); }
+.fr-badge--error { background: #fff5f5; color: var(--error); }
+
+/* UTILITIES */
+.hidden { display: none !important; }
+.fr-mt-6w { margin-top: 3rem; }
+.fr-mb-2w { margin-bottom: 1rem; }
+.fr-py-6w { padding-top: 3rem; padding-bottom: 3rem; }
+.fr-text--center { text-align: center; }
+
+/* TOP BAR INSTITUTIONNELLE */
+.gov-topbar { background: #C1272D; color: #fff; font-size: 0.78rem; }
+.gov-topbar__inner { max-width: 1200px; margin: 0 auto; padding: 0.4rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.gov-topbar__accent { height: 3px; background: #006233; }
+
+/* FOOTER */
+.site-footer { background: var(--grey-100); color: #fff; margin-top: 4rem; }
+.site-footer__top { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
+.site-footer__col h4 { color: var(--gold-menps); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.85rem; }
+.site-footer__col p { color: #b9c4d6; font-size: 0.875rem; }
+.site-footer__col a { display: block; color: #cdd6e4; text-decoration: none; font-size: 0.875rem; margin-bottom: 0.55rem; }
+.site-footer__col a:hover { color: #fff; text-decoration: underline; }
+.site-footer__bottom { border-top: 1px solid rgba(255,255,255,0.15); padding: 1.25rem 1rem; text-align: center; font-size: 0.8rem; color: #9fb0c9; }
+
+/* LOGIN */
+.login-container { max-width: 460px; margin: 4rem auto; background: #fff; padding: 2.5rem; border: 1px solid var(--grey-950); }
+.login-container h1 { color: var(--blue-france); margin-bottom: 0.5rem; }
+.login-subtitle { color: var(--grey-200); margin-bottom: 1.5rem; }
+
+/* SÉLECTEUR DE PROFIL (login) */
+.role-selector { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.75rem; }
+.role-option {
+    display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 0.25rem;
+    padding: 0.9rem 1.1rem; border: 2px solid var(--grey-950); background: #fff; border-radius: var(--radius);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.role-option:hover { border-color: var(--blue-france); }
+.role-option--active { border-color: var(--blue-france); background: var(--blue-france-975); }
+.role-option__title { font-weight: 700; color: var(--blue-france); font-size: 1rem; }
+.role-option__desc { color: var(--grey-200); font-size: 0.82rem; }
+
+/* PROGRESS BAR */
+.progress-bar { width: 100%; height: 8px; background: var(--grey-950); margin-top: 0.5rem; }
+.progress-bar__fill { height: 100%; background: var(--blue-france); transition: width 0.3s; }
+
+/* ADMIN */
+.admin-help { color: var(--grey-200); font-size: 0.9rem; margin-bottom: 1rem; max-width: 720px; }
+.stat-card { background: #fff; padding: 1.5rem; border-top: 3px solid var(--blue-france); }
+.stat-card__value { font-size: 2rem; font-weight: 700; color: var(--blue-france); }
+.stat-card__label { font-size: 0.875rem; color: var(--grey-200); margin-top: 0.25rem; }
+
+/* QUIZ OPTIONS */
+.quiz-option { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--grey-950); cursor: pointer; transition: all 0.2s; }
+.quiz-option:hover { background: var(--blue-france-975); border-color: var(--blue-france); }
+.quiz-option input { cursor: pointer; }
+
+/* MENPS LOGO */
+.menps-logo { height: 46px; padding-right: 1rem; border-right: 1px solid var(--grey-950); }
+
+/* SUPPORT WIDGET */
+.support-fab {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
+    background: var(--blue-france); color: #fff; border: none; border-radius: 50px;
+    padding: 0.75rem 1.25rem; font-weight: 700; box-shadow: var(--shadow); cursor: pointer;
+}
+.support-fab:hover { background: var(--grey-100); }
+.support-modal {
+    position: fixed; inset: 0; background: rgba(15,35,64,0.45); z-index: 101;
+    display: flex; align-items: center; justify-content: center;
+}
+.support-modal__box {
+    background: #fff; border-radius: var(--radius); padding: 1.5rem; width: 90%; max-width: 420px;
+    box-shadow: var(--shadow);
+}
+.support-modal__box h3 { color: var(--blue-france); margin-bottom: 1rem; }
+.support-modal__box .fr-form-group { margin-bottom: 0.75rem; }
+
+/* MINI-FORMATION BADGE */
+.fr-badge--mini { background: var(--gold-menps); color: #fff; }

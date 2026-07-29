@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord — Formation en IA</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="fr-header">
+        <div class="fr-container fr-header__body">
+            <div class="fr-header__brand">
+                <img src="../img/logo-menps.png" alt="Ministère de l'Éducation Nationale, du Préscolaire et des Sports" class="menps-logo">
+                <div class="fr-header__service"><p class="fr-header__service-title">Formation en IA</p></div>
+            </div>
+            <div class="fr-header__tools">
+                <div id="user-menu"><span id="user-name"></span><button onclick="logout()" class="fr-btn fr-btn--tertiary">Déconnexion</button></div>
+            </div>
+        </div>
+        <nav class="fr-nav">
+            <div class="fr-container">
+                <ul class="fr-nav__list">
+                    <li><a class="fr-nav__link" href="../index.html">Accueil</a></li>
+                    <li><a class="fr-nav__link" href="modules.html">Catalogue</a></li>
+                    <li><a class="fr-nav__link fr-nav__link--active" href="dashboard.html">Tableau de bord</a></li>
+                    <li><a class="fr-nav__link" href="progression.html">Ma progression</a></li>
+                    <li><a class="fr-nav__link" href="mini-formation.html">Mini-formations</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="fr-container fr-py-6w">
+        <h1 style="color:var(--blue-france);margin-bottom:2rem">Mon tableau de bord</h1>
+        <div id="stats-container" class="fr-grid-row fr-grid-row--gutters fr-mb-2w"></div>
+        <h2 class="fr-mb-2w">Modules recommandés</h2>
+        <div id="modules-reco" class="fr-grid-row fr-grid-row--gutters"></div>
+    </main>
+
+    <script src="../js/app.js"></script>
+    <script>
+        requireAuth(); updateHeader();
+        async function loadDashboard() {
+            try {
+                const [progressionData, modulesData] = await Promise.all([api('/progression/me'), api('/modules')]);
+                const stats = progressionData.stats;
+                document.getElementById('stats-container').innerHTML = `
+                    <div class="fr-col-12 fr-col-md-4"><div class="stat-card"><div class="stat-card__value">${stats.modulesTermines||0}</div><div class="stat-card__label">Modules terminés</div></div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="stat-card"><div class="stat-card__value">${stats.modulesEnCours||0}</div><div class="stat-card__label">Modules en cours</div></div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="stat-card"><div class="stat-card__value">${stats.moyenneScore||0}%</div><div class="stat-card__label">Moyenne aux quiz</div></div></div>`;
+                const nonCommences = modulesData.filter(m => !m.progression || m.progression.statut !== 'Terminé').slice(0,3);
+                if (modulesData.length === 0) {
+                    document.getElementById('modules-reco').innerHTML = `<div class="fr-col-12"><p>Aucun module de formation n'est disponible pour le moment. Revenez bientôt !</p></div>`;
+                } else if (nonCommences.length === 0) {
+                    document.getElementById('modules-reco').innerHTML = `<div class="fr-col-12">
+                        <p>🎉 Bravo, vous avez terminé tous les modules disponibles !</p>
+                        <a href="modules.html" class="fr-btn fr-btn--secondary" style="margin-top:1rem">Revoir le catalogue</a>
+                    </div>`;
+                } else {
+                    document.getElementById('modules-reco').innerHTML = nonCommences.map(m => `
+                        <div class="fr-col-12 fr-col-md-4"><div class="fr-card"><div class="fr-card__body">
+                            <span class="fr-badge fr-mb-2w">${m.niveau}</span>
+                            <h3 class="fr-card__title">${m.titre}</h3>
+                            <p class="fr-card__desc">${m.description ? m.description.substring(0,100) : ''}...</p>
+                            <a href="module-detail.html?id=${m.id}" class="fr-btn fr-btn--secondary" style="margin-top:1rem">${m.progression && m.progression.statut === 'En cours' ? 'Continuer' : 'Découvrir'}</a>
+                        </div></div></div>`).join('');
+                }
+            } catch (e) { console.error(e); }
+        }
+        loadDashboard();
+    </script>
+</body>
+</html>

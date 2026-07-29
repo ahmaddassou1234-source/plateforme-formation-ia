@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module — Formation en IA</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="fr-header">
+        <div class="fr-container fr-header__body">
+            <div class="fr-header__brand"><img src="../img/logo-menps.png" alt="Ministère de l'Éducation Nationale, du Préscolaire et des Sports" class="menps-logo"><div class="fr-header__service"><p class="fr-header__service-title">Formation en IA</p></div></div>
+            <div class="fr-header__tools"><div id="user-menu"><span id="user-name"></span><button onclick="logout()" class="fr-btn fr-btn--tertiary">Déconnexion</button></div></div>
+        </div>
+        <nav class="fr-nav"><div class="fr-container"><ul class="fr-nav__list">
+            <li><a class="fr-nav__link" href="../index.html">Accueil</a></li>
+            <li><a class="fr-nav__link" href="modules.html">Catalogue</a></li>
+            <li><a class="fr-nav__link" href="progression.html">Ma progression</a></li>
+            <li><a class="fr-nav__link" href="mini-formation.html">Mini-formations</a></li>
+        </ul></div></nav>
+    </header>
+
+    <main class="fr-container fr-py-6w">
+        <div id="module-content"></div>
+    </main>
+
+    <script src="../js/app.js"></script>
+    <script>
+        requireAuth(); updateHeader();
+        const urlParams = new URLSearchParams(window.location.search);
+        const moduleId = urlParams.get('id');
+
+        async function loadModule() {
+            try {
+                const module = await api(`/modules/${moduleId}`);
+                const container = document.getElementById('module-content');
+                let contenusHtml = '';
+                if(module.contenus && module.contenus.length>0){
+                    contenusHtml = module.contenus.map((c,i)=>{
+                        const fileUrl = c.fichier ? (c.fichier.startsWith('http') ? c.fichier : `/${c.fichier}`) : null;
+                        let fichierHtml = '';
+                        if (fileUrl && c.type === 'Vidéo') {
+                            fichierHtml = `<video controls style="width:100%;max-width:640px;margin-top:0.75rem" src="${fileUrl}">Votre navigateur ne supporte pas la lecture vidéo.</video>`;
+                        } else if (fileUrl) {
+                            fichierHtml = `<p style="margin-top:0.5rem"><a href="${fileUrl}" target="_blank" rel="noopener" class="fr-btn fr-btn--secondary">Ouvrir le fichier (${c.type})</a></p>`;
+                        }
+                        return `
+                        <div class="fr-card fr-mb-2w"><div class="fr-card__body">
+                            <span class="fr-badge">Étape ${i+1} — ${c.type}</span>
+                            <h3 class="fr-card__title" style="margin-top:0.5rem">${c.titre}</h3>
+                            ${c.texteContenu?`<p>${c.texteContenu}</p>`:''}
+                            ${fichierHtml}
+                        </div></div>`;
+                    }).join('');
+                }
+                let quizButton='';
+                if(module.quiz){
+                    quizButton=`<div class="fr-alert fr-alert--info" style="margin-top:2rem"><h3>Quiz de validation</h3><p>Ce module comprend un quiz : "${module.quiz.titre}"</p><a href="quiz.html?quizId=${module.quiz.id}&moduleId=${module.id}" class="fr-btn" style="margin-top:1rem">Passer le quiz</a></div>`;
+                }
+                container.innerHTML=`
+                    <div style="margin-bottom:2rem">
+                        <span class="fr-badge">${module.niveau}</span>
+                        <span class="fr-badge">${module.theme}</span>
+                        ${module.estMiniFormation?'<span class="fr-badge fr-badge--mini">Mini-formation</span>':''}
+                        <h1 style="color:var(--blue-france);margin-top:1rem">${module.titre}</h1>
+                        <p class="fr-text--lead">${module.description||''}</p>
+                        <p style="color:var(--grey-200)">Durée estimée : ${module.duree} minutes${module.estMiniFormation?` • Créée par ${module.createurNom}`:''}</p>
+                        ${module.progression?.statut==='Terminé'?'<span class="fr-badge fr-badge--success">Module terminé</span>':`<button onclick="startModule()" class="fr-btn">Marquer comme démarré</button>`}
+                    </div>
+                    <h2 class="fr-mb-2w">Contenu pédagogique</h2>
+                    ${contenusHtml||'<p>Aucun contenu disponible.</p>'}
+                    ${quizButton}`;
+            } catch(e){ console.error(e); }
+        }
+        async function startModule(){
+            try{ await api(`/progression/start/${moduleId}`,{method:'POST'}); alert('Module démarré !'); loadModule(); }
+            catch(e){ alert(e.message); }
+        }
+        loadModule();
+    </script>
+</body>
+</html>

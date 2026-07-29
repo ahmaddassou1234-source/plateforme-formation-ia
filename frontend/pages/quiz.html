@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz — Formation en IA</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="fr-header">
+        <div class="fr-container fr-header__body">
+            <div class="fr-header__brand"><img src="../img/logo-menps.png" alt="Ministère de l'Éducation Nationale, du Préscolaire et des Sports" class="menps-logo"><div class="fr-header__service"><p class="fr-header__service-title">Formation en IA</p></div></div>
+            <div class="fr-header__tools"><div id="user-menu"><span id="user-name"></span><button onclick="logout()" class="fr-btn fr-btn--tertiary">Déconnexion</button></div></div>
+        </div>
+    </header>
+
+    <main class="fr-container fr-py-6w" style="max-width:800px">
+        <div id="quiz-container"></div>
+        <div id="result-container" class="hidden" style="margin-top:2rem"></div>
+    </main>
+
+    <script src="../js/app.js"></script>
+    <script>
+        requireAuth(); updateHeader();
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get('quizId');
+        let quizData = null, userAnswers = {};
+
+        async function loadQuiz() {
+            try {
+                quizData = await api(`/quiz/${quizId}`);
+                const container = document.getElementById('quiz-container');
+                let questionsHtml = quizData.questions.map((q, idx)=>`
+                    <div class="fr-card fr-mb-2w"><div class="fr-card__body">
+                        <p style="font-weight:600;margin-bottom:1rem">Question ${idx+1} — ${q.type}</p>
+                        <p style="font-size:1.125rem;margin-bottom:1rem">${q.texte}</p>
+                        <div style="display:flex;flex-direction:column;gap:0.5rem">
+                            ${q.reponses.map(r=>`<label class="quiz-option"><input type="radio" name="q${q.id}" value="${r.id}" onchange="selectAnswer(${q.id}, ${r.id})"><span>${r.texte}</span></label>`).join('')}
+                        </div>
+                    </div></div>`).join('');
+                container.innerHTML=`<h1 style="color:var(--blue-france);margin-bottom:0.5rem">${quizData.titre}</h1><p style="margin-bottom:2rem">${quizData.description||''}</p><form id="quiz-form" onsubmit="submitQuiz(event)">${questionsHtml}<button type="submit" class="fr-btn fr-btn--lg">Valider mes réponses</button></form>`;
+            } catch(e){ console.error(e); }
+        }
+        function selectAnswer(questionId, reponseId){ userAnswers[questionId]=reponseId; }
+        async function submitQuiz(e){
+            e.preventDefault();
+            try{
+                const result = await api(`/quiz/${quizId}/submit`,{method:'POST',body:{reponses:userAnswers}});
+                document.getElementById('quiz-container').classList.add('hidden');
+                const rc = document.getElementById('result-container'); rc.classList.remove('hidden');
+                const badgesHtml = result.badgesObtenus?.length?`<div style="margin-top:1rem"><strong>🏅 Badges obtenus :</strong> ${result.badgesObtenus.join(', ')}</div>`:'';
+                rc.innerHTML=`<div class="fr-card"><div class="fr-card__body"><h2 style="color:var(--blue-france)">Résultat du quiz</h2><div class="fr-alert fr-alert--${result.reussi?'success':'info'}" style="margin:1.5rem 0"><p style="font-size:1.5rem;font-weight:700">Score : ${result.score}%</p><p>Seuil de réussite : ${result.seuil}%</p><p>${result.reussi?'✅ Quiz réussi !':'❌ Quiz non réussi. Vous pouvez recommencer.'}</p></div>${badgesHtml}<a href="modules.html" class="fr-btn fr-btn--secondary" style="margin-top:1rem">Retour au catalogue</a></div></div>`;
+            } catch(e){ alert(e.message); }
+        }
+        loadQuiz();
+    </script>
+</body>
+</html>

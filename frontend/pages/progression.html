@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma progression — Formation en IA</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="fr-header">
+        <div class="fr-container fr-header__body">
+            <div class="fr-header__brand"><img src="../img/logo-menps.png" alt="Ministère de l'Éducation Nationale, du Préscolaire et des Sports" class="menps-logo"><div class="fr-header__service"><p class="fr-header__service-title">Formation en IA</p></div></div>
+            <div class="fr-header__tools"><div id="user-menu"><span id="user-name"></span><button onclick="logout()" class="fr-btn fr-btn--tertiary">Déconnexion</button></div></div>
+        </div>
+        <nav class="fr-nav"><div class="fr-container"><ul class="fr-nav__list">
+            <li><a class="fr-nav__link" href="../index.html">Accueil</a></li>
+            <li><a class="fr-nav__link" href="modules.html">Catalogue</a></li>
+            <li><a class="fr-nav__link fr-nav__link--active" href="progression.html">Ma progression</a></li>
+            <li><a class="fr-nav__link" href="mini-formation.html">Mini-formations</a></li>
+        </ul></div></nav>
+    </header>
+
+    <main class="fr-container fr-py-6w">
+        <h1 style="color:var(--blue-france);margin-bottom:2rem">Ma progression</h1>
+        <div id="stats" class="fr-grid-row fr-grid-row--gutters fr-mb-2w"></div>
+        <h2 class="fr-mb-2w">Mes modules</h2>
+        <div id="progressions-list"></div>
+        <h2 class="fr-mb-2w" style="margin-top:3rem">Mes badges</h2>
+        <div id="badges-list" class="fr-grid-row fr-grid-row--gutters"></div>
+    </main>
+
+    <script src="../js/app.js"></script>
+    <script>
+        requireAuth(); updateHeader();
+        async function loadProgression() {
+            try {
+                const [progData, badgesData] = await Promise.all([api('/progression/me'), api('/badges/me')]);
+                const stats = progData.stats;
+                document.getElementById('stats').innerHTML = `
+                    <div class="fr-col-12 fr-col-md-3"><div class="stat-card"><div class="stat-card__value">${stats.modulesTermines||0}</div><div class="stat-card__label">Terminés</div></div></div>
+                    <div class="fr-col-12 fr-col-md-3"><div class="stat-card"><div class="stat-card__value">${stats.modulesEnCours||0}</div><div class="stat-card__label">En cours</div></div></div>
+                    <div class="fr-col-12 fr-col-md-3"><div class="stat-card"><div class="stat-card__value">${stats.moyenneScore||0}%</div><div class="stat-card__label">Moyenne</div></div></div>
+                    <div class="fr-col-12 fr-col-md-3"><div class="stat-card"><div class="stat-card__value">${stats.heuresFormees||0}h</div><div class="stat-card__label">Heures formées</div></div></div>`;
+                const list = document.getElementById('progressions-list');
+                if(progData.progressions.length===0){ list.innerHTML="<p>Vous n'avez pas encore commencé de module.</p>"; }
+                else {
+                    list.innerHTML = `<table class="fr-table"><thead><tr><th>Module</th><th>Thème</th><th>Statut</th><th>Score</th><th>Avancement</th></tr></thead><tbody>
+                        ${progData.progressions.map(p=>`<tr><td><strong>${p.titre}</strong></td><td>${p.theme}</td><td><span class="fr-badge ${p.statut==='Terminé'?'fr-badge--success':''}">${p.statut}</span></td><td>${p.score}%</td><td><div class="progress-bar"><div class="progress-bar__fill" style="width:${p.pourcentageAvancement}%"></div></div><small>${p.pourcentageAvancement}%</small></td></tr>`).join('')}
+                    </tbody></table>`;
+                }
+                const bl = document.getElementById('badges-list');
+                if(badgesData.length===0){ bl.innerHTML='<div class="fr-col-12"><p>Aucun badge obtenu pour le moment.</p></div>'; }
+                else {
+                    bl.innerHTML = badgesData.map(b=>`<div class="fr-col-12 fr-col-md-4"><div class="fr-card"><div class="fr-card__body"><h3 class="fr-card__title">🏅 ${b.titre}</h3><p class="fr-card__desc">${b.description}</p><small style="color:var(--grey-200)">Obtenu le ${new Date(b.dateObtention).toLocaleDateString('fr-FR')}</small></div></div></div>`).join('');
+                }
+            } catch(e){ console.error(e); }
+        }
+        loadProgression();
+    </script>
+</body>
+</html>

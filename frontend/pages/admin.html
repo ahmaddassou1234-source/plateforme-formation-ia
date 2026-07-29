@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration — Formation en IA</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="fr-header">
+        <div class="fr-container fr-header__body">
+            <div class="fr-header__brand"><img src="../img/logo-menps.png" alt="Ministère de l'Éducation Nationale, du Préscolaire et des Sports" class="menps-logo"><div class="fr-header__service"><p class="fr-header__service-title">Formation en IA</p></div></div>
+            <div class="fr-header__tools"><div id="user-menu"><span id="user-name"></span><button onclick="logout()" class="fr-btn fr-btn--tertiary">Déconnexion</button></div></div>
+        </div>
+        <nav class="fr-nav"><div class="fr-container"><ul class="fr-nav__list">
+            <li><a class="fr-nav__link" href="../index.html">Accueil</a></li>
+            <li><a class="fr-nav__link fr-nav__link--active" href="admin.html">Administration</a></li>
+        </ul></div></nav>
+    </header>
+
+    <main class="fr-container fr-py-6w">
+        <h1 style="color:var(--blue-france);margin-bottom:2rem">Espace administrateur (DRPN)</h1>
+        <p style="margin-bottom:2rem">Gérez les contenus de la plateforme et suivez le pilote national de la formation des enseignants à l'IA.</p>
+        <div id="stats-admin" class="fr-grid-row fr-grid-row--gutters fr-mb-2w"></div>
+
+        <h2 class="fr-mb-2w">Suivi du pilote national — par AREF</h2>
+        <div id="pilote-national" class="fr-mb-2w"></div>
+
+        <h2 class="fr-mb-2w">1. Créer un module de formation</h2>
+        <p class="admin-help">Un module est le conteneur principal d'une formation (ex. "Introduction à l'IA générative"). Une fois créé, ajoutez-lui du contenu pédagogique puis un quiz ci-dessous.</p>
+        <div class="fr-card fr-mb-2w"><div class="fr-card__body">
+            <form id="create-module-form" onsubmit="createModule(event)">
+                <input type="hidden" id="mod-id">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-md-6"><div class="fr-form-group">
+                        <label class="fr-label">Titre du module</label>
+                        <input type="text" id="mod-titre" class="fr-input" placeholder="Ex. Introduction à l'IA générative" required>
+                    </div></div>
+                    <div class="fr-col-12 fr-col-md-6"><div class="fr-form-group">
+                        <label class="fr-label">Thème</label>
+                        <input type="text" id="mod-theme" class="fr-input" placeholder="Ex. Culture IA, Outils numériques..." required>
+                    </div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group">
+                        <label class="fr-label">Niveau requis</label>
+                        <select id="mod-niveau" class="fr-select"><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option></select>
+                    </div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group">
+                        <label class="fr-label">Durée estimée (minutes)</label>
+                        <input type="number" id="mod-duree" class="fr-input" placeholder="Ex. 60" min="1" required>
+                    </div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group">
+                        <label class="fr-label">Public cible</label>
+                        <select id="mod-role" class="fr-select"><option>Enseignant</option><option>Tous</option></select>
+                    </div></div>
+                    <div class="fr-col-12"><div class="fr-form-group">
+                        <label class="fr-label">Description</label>
+                        <textarea id="mod-desc" class="fr-input" rows="3" placeholder="Résumez en quelques phrases ce que l'enseignant va apprendre dans ce module." required></textarea>
+                    </div></div>
+                </div>
+                <button type="submit" class="fr-btn" id="mod-submit-btn">Créer le module</button>
+                <button type="button" class="fr-btn fr-btn--secondary hidden" id="mod-cancel-btn" onclick="resetModuleForm()">Annuler la modification</button>
+            </form>
+        </div></div>
+        <div id="modules-list"></div>
+
+        <h2 class="fr-mb-2w" style="margin-top:3rem">2. Ajouter du contenu pédagogique</h2>
+        <p class="admin-help">Ajoutez au module le contenu que l'enseignant va consulter : déposez directement un fichier vidéo ou PDF, ou renseignez un texte pédagogique.</p>
+        <div class="fr-card fr-mb-2w"><div class="fr-card__body">
+            <form id="create-contenu-form" onsubmit="createContenu(event)">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group"><label class="fr-label">Module concerné</label><select id="ct-module" class="fr-select" required></select></div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group"><label class="fr-label">Type de contenu</label><select id="ct-type" class="fr-select" onchange="toggleContenuType()"><option>Vidéo</option><option>PDF</option><option>Texte</option><option>Audio</option><option>Infographie</option></select></div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group"><label class="fr-label">Titre du contenu</label><input type="text" id="ct-titre" class="fr-input" placeholder="Ex. Vidéo d'introduction" required></div></div>
+                    <div class="fr-col-12 fr-col-md-6" id="ct-fichier-group"><div class="fr-form-group">
+                        <label class="fr-label">Déposer un fichier (vidéo ou PDF)</label>
+                        <input type="file" id="ct-fichier-upload" class="fr-input" accept=".mp4,.pdf,.jpg,.jpeg,.png,.pptx,.docx,.xlsx">
+                        <p class="admin-help" style="margin-top:0.4rem">Ou indiquez un chemin/URL existant :</p>
+                        <input type="text" id="ct-fichier" class="fr-input" placeholder="docs/mon-fichier.pdf">
+                    </div></div>
+                    <div class="fr-col-12 fr-col-md-6"><div class="fr-form-group"><label class="fr-label">Texte du contenu (optionnel)</label><textarea id="ct-texte" class="fr-input" rows="2" placeholder="Texte pédagogique ou légende affichée avec ce contenu"></textarea></div></div>
+                </div>
+                <button type="submit" class="fr-btn">Ajouter le contenu</button>
+            </form>
+        </div></div>
+        <div id="contenus-list"></div>
+
+        <h2 class="fr-mb-2w" style="margin-top:3rem">3. Créer le quiz du module</h2>
+        <p class="admin-help">Chaque module peut avoir un quiz de validation. Le seuil de réussite détermine le score minimum (en %) pour que l'enseignant valide le module.</p>
+        <div class="fr-card fr-mb-2w"><div class="fr-card__body">
+            <form id="create-quiz-form" onsubmit="createQuiz(event)">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group"><label class="fr-label">Module</label><select id="qz-module" class="fr-select" required></select></div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group"><label class="fr-label">Titre du quiz</label><input type="text" id="qz-titre" class="fr-input" required></div></div>
+                    <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group"><label class="fr-label">Seuil de réussite (%)</label><input type="number" id="qz-seuil" class="fr-input" value="70" min="0" max="100"></div></div>
+                    <div class="fr-col-12"><div class="fr-form-group"><label class="fr-label">Description</label><input type="text" id="qz-desc" class="fr-input"></div></div>
+                </div>
+                <button type="submit" class="fr-btn">Créer le quiz</button>
+            </form>
+        </div></div>
+        <div id="quiz-list"></div>
+
+        <h2 class="fr-mb-2w" style="margin-top:3rem">4. Ajouter les questions du quiz</h2>
+        <p class="admin-help">Un quiz sans question ne peut pas être passé par un enseignant : ajoutez au moins une question ci-dessous. Cochez la case devant la bonne réponse.</p>
+        <div class="fr-card fr-mb-2w"><div class="fr-card__body">
+            <div class="fr-form-group">
+                <label class="fr-label">Choisir un quiz</label>
+                <select id="qs-quiz-select" class="fr-select" onchange="loadQuestions()"></select>
+            </div>
+            <form id="create-question-form" onsubmit="createQuestion(event)">
+                <div class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-md-8"><div class="fr-form-group"><label class="fr-label">Intitulé de la question</label><input type="text" id="qs-texte" class="fr-input" required></div></div>
+                    <div class="fr-col-12 fr-col-md-2"><div class="fr-form-group"><label class="fr-label">Type</label><select id="qs-type" class="fr-select" onchange="toggleQuestionType()"><option value="QCM">QCM</option><option value="Vrai/Faux">Vrai/Faux</option></select></div></div>
+                    <div class="fr-col-12 fr-col-md-2"><div class="fr-form-group"><label class="fr-label">Points</label><input type="number" id="qs-points" class="fr-input" value="1" min="1"></div></div>
+                </div>
+                <div id="qs-reponses-qcm" class="fr-grid-row fr-grid-row--gutters">
+                    <div class="fr-col-12 fr-col-md-6"><div class="fr-form-group" style="display:flex;align-items:center;gap:0.5rem">
+                        <input type="radio" name="qs-correcte" value="0" checked>
+                        <input type="text" id="qs-rep-0" class="fr-input" placeholder="Réponse 1" required>
+                    </div></div>
+                    <div class="fr-col-12 fr-col-md-6"><div class="fr-form-group" style="display:flex;align-items:center;gap:0.5rem">
+                        <input type="radio" name="qs-correcte" value="1">
+                        <input type="text" id="qs-rep-1" class="fr-input" placeholder="Réponse 2" required>
+                    </div></div>
+                    <div class="fr-col-12 fr-col-md-6"><div class="fr-form-group" style="display:flex;align-items:center;gap:0.5rem">
+                        <input type="radio" name="qs-correcte" value="2">
+                        <input type="text" id="qs-rep-2" class="fr-input" placeholder="Réponse 3 (optionnel)">
+                    </div></div>
+                    <div class="fr-col-12 fr-col-md-6"><div class="fr-form-group" style="display:flex;align-items:center;gap:0.5rem">
+                        <input type="radio" name="qs-correcte" value="3">
+                        <input type="text" id="qs-rep-3" class="fr-input" placeholder="Réponse 4 (optionnel)">
+                    </div></div>
+                </div>
+                <div id="qs-reponses-vf" class="fr-grid-row fr-grid-row--gutters hidden">
+                    <div class="fr-col-12 fr-col-md-6"><label class="fr-label"><input type="radio" name="qs-correcte-vf" value="vrai" checked> Vrai est la bonne réponse</label></div>
+                    <div class="fr-col-12 fr-col-md-6"><label class="fr-label"><input type="radio" name="qs-correcte-vf" value="faux"> Faux est la bonne réponse</label></div>
+                </div>
+                <button type="submit" class="fr-btn">Ajouter la question</button>
+            </form>
+        </div></div>
+        <div id="questions-list"></div>
+
+        <h2 class="fr-mb-2w" style="margin-top:3rem">Messages du support</h2>
+        <div id="support-list"></div>
+
+        <h2 class="fr-mb-2w" style="margin-top:3rem">Utilisateurs inscrits</h2>
+        <div id="users-list"></div>
+    </main>
+
+    <script src="../js/app.js"></script>
+    <script>
+        requireAuth(); requireAdmin(); updateHeader();
+        let modulesCache = [];
+        let quizzesCache = [];
+
+        async function loadAdmin() {
+            try {
+                const data = await api('/admin/dashboard');
+                document.getElementById('stats-admin').innerHTML = `
+                    <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalUtilisateurs}</div><div class="stat-card__label">Utilisateurs</div></div></div>
+                    <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalEnseignants}</div><div class="stat-card__label">Enseignants</div></div></div>
+                    <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalModules}</div><div class="stat-card__label">Modules officiels</div></div></div>
+                    <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalMiniFormations}</div><div class="stat-card__label">Mini-formations</div></div></div>
+                    <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalCompletions}</div><div class="stat-card__label">Complétions</div></div></div>
+                    <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.ticketsOuverts}</div><div class="stat-card__label">Tickets ouverts</div></div></div>`;
+
+                const pilote = await api('/admin/pilote-national');
+                document.getElementById('pilote-national').innerHTML = `<table class="fr-table"><thead><tr><th>AREF</th><th>Enseignants</th><th>Établissements</th><th>Modules terminés</th><th>Score moyen</th></tr></thead><tbody>
+                    ${pilote.parAref.map(a=>`<tr><td>${a.arefId}</td><td>${a.nbEnseignants}</td><td>${a.nbEtablissements}</td><td>${a.nbCompletions}</td><td>${a.moyenneScore!==null?a.moyenneScore+'%':'-'}</td></tr>`).join('')}
+                </tbody></table>`;
+
+                modulesCache = await api('/modules');
+                document.getElementById('modules-list').innerHTML = `<table class="fr-table"><thead><tr><th>Titre</th><th>Type</th><th>Créateur</th><th>Niveau</th><th></th></tr></thead><tbody>
+                    ${modulesCache.map(m=>`<tr><td>${m.titre}</td><td>${m.estMiniFormation?'<span class="fr-badge fr-badge--mini">Mini-formation</span>':'Officiel'}</td><td>${m.createurNom||'-'}</td><td>${m.niveau}</td><td>
+                        <button class="fr-btn fr-btn--secondary" onclick="editModule(${m.id})">Modifier</button>
+                        <button class="fr-btn fr-btn--secondary" onclick="deleteModule(${m.id})">Supprimer</button>
+                    </td></tr>`).join('')}
+                </tbody></table>`;
+
+                const moduleOptions = modulesCache.map(m=>`<option value="${m.id}">${m.titre}</option>`).join('');
+                document.getElementById('ct-module').innerHTML = moduleOptions;
+                document.getElementById('qz-module').innerHTML = moduleOptions;
+
+                const contenus = await api('/admin/contenus');
+                document.getElementById('contenus-list').innerHTML = `<table class="fr-table"><thead><tr><th>Module</th><th>Type</th><th>Titre</th><th></th></tr></thead><tbody>
+                    ${contenus.map(c=>`<tr><td>${c.moduleTitre}</td><td>${c.type}</td><td>${c.titre}</td><td><button class="fr-btn fr-btn--secondary" onclick="deleteContenu(${c.id})">Supprimer</button></td></tr>`).join('')}
+                </tbody></table>`;
+
+                quizzesCache = await api('/admin/quiz');
+                document.getElementById('quiz-list').innerHTML = `<table class="fr-table"><thead><tr><th>Module</th><th>Titre</th><th>Questions</th><th>Seuil</th><th></th></tr></thead><tbody>
+                    ${quizzesCache.map(q=>`<tr><td>${q.moduleTitre}</td><td>${q.titre}</td><td>${q.nbQuestions}</td><td>${q.seuilReussite}%</td><td><button class="fr-btn fr-btn--secondary" onclick="deleteQuiz(${q.id})">Supprimer</button></td></tr>`).join('')}
+                </tbody></table>`;
+
+                const qsSelect = document.getElementById('qs-quiz-select');
+                const previousSelection = qsSelect.value;
+                qsSelect.innerHTML = quizzesCache.map(q=>`<option value="${q.id}">${q.moduleTitre} — ${q.titre}</option>`).join('');
+                if (previousSelection && quizzesCache.some(q => String(q.id) === previousSelection)) qsSelect.value = previousSelection;
+                if (qsSelect.value) loadQuestions(); else document.getElementById('questions-list').innerHTML = '<p>Créez un quiz ci-dessus pour lui ajouter des questions.</p>';
+
+                const messages = await api('/support');
+                document.getElementById('support-list').innerHTML = messages.length ? `<table class="fr-table"><thead><tr><th>De</th><th>Sujet</th><th>Message</th><th>Statut</th><th></th></tr></thead><tbody>
+                    ${messages.map(m=>`<tr><td>${m.expediteurNom}</td><td>${m.sujet}</td><td>${m.contenu}</td><td><span class="fr-badge ${m.statut==='Résolu'?'fr-badge--success':''}">${m.statut}</span></td><td>${m.statut!=='Résolu'?`<button class="fr-btn fr-btn--secondary" onclick="resolveTicket(${m.id})">Marquer résolu</button>`:''}</td></tr>`).join('')}
+                </tbody></table>` : '<p>Aucun message pour le moment.</p>';
+
+                const users = await api('/admin/utilisateurs');
+                document.getElementById('users-list').innerHTML = `<table class="fr-table"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Établissement</th><th>Inscription</th><th></th></tr></thead><tbody>
+                    ${users.map(u=>`<tr><td>${u.nom}</td><td>${u.email}</td><td><span class="fr-badge">${u.role}</span></td><td>${u.etablissementNom||'-'}</td><td>${new Date(u.dateCreation).toLocaleDateString('fr-FR')}</td><td><button class="fr-btn fr-btn--secondary" onclick="deleteUser(${u.id})">Supprimer</button></td></tr>`).join('')}
+                </tbody></table>`;
+            } catch(e){ console.error(e); }
+        }
+
+        function resetModuleForm() {
+            document.getElementById('create-module-form').reset();
+            document.getElementById('mod-id').value = '';
+            document.getElementById('mod-submit-btn').textContent = 'Créer le module';
+            document.getElementById('mod-cancel-btn').classList.add('hidden');
+        }
+        function editModule(id) {
+            const m = modulesCache.find(x => x.id === id);
+            if (!m) return;
+            document.getElementById('mod-id').value = m.id;
+            document.getElementById('mod-titre').value = m.titre;
+            document.getElementById('mod-theme').value = m.theme;
+            document.getElementById('mod-niveau').value = m.niveau;
+            document.getElementById('mod-duree').value = m.duree;
+            document.getElementById('mod-role').value = m.roleCible;
+            document.getElementById('mod-desc').value = m.description || '';
+            document.getElementById('mod-submit-btn').textContent = 'Enregistrer les modifications';
+            document.getElementById('mod-cancel-btn').classList.remove('hidden');
+            window.scrollTo({top: document.getElementById('create-module-form').offsetTop - 100, behavior: 'smooth'});
+        }
+        async function createModule(e){
+            e.preventDefault();
+            const id = document.getElementById('mod-id').value;
+            const payload = {
+                titre:document.getElementById('mod-titre').value,
+                theme:document.getElementById('mod-theme').value,
+                niveau:document.getElementById('mod-niveau').value,
+                duree:parseInt(document.getElementById('mod-duree').value),
+                roleCible:document.getElementById('mod-role').value,
+                description:document.getElementById('mod-desc').value
+            };
+            try{
+                let newModuleId = null;
+                if (id) await api(`/modules/${id}`, {method:'PUT', body: payload});
+                else newModuleId = (await api('/modules', {method:'POST', body: payload})).moduleId;
+                alert(id ? 'Module mis à jour !' : 'Module créé avec succès ! Ajoutez-lui maintenant du contenu et un quiz ci-dessous.');
+                resetModuleForm();
+                await loadAdmin();
+                if (newModuleId) {
+                    document.getElementById('ct-module').value = newModuleId;
+                    document.getElementById('qz-module').value = newModuleId;
+                    window.scrollTo({top: document.getElementById('create-contenu-form').offsetTop - 100, behavior: 'smooth'});
+                }
+            } catch(e){ alert(e.message); }
+        }
+        async function deleteModule(id){
+            if (!confirm('Supprimer ce module et tout son contenu (contenus, quiz, progressions) ?')) return;
+            try{ await api(`/modules/${id}`, {method:'DELETE'}); loadAdmin(); } catch(e){ alert(e.message); }
+        }
+        function toggleContenuType(){
+            const isText = document.getElementById('ct-type').value === 'Texte';
+            document.getElementById('ct-fichier-group').classList.toggle('hidden', isText);
+        }
+        async function createContenu(e){
+            e.preventDefault();
+            const fileInput = document.getElementById('ct-fichier-upload');
+            const moduleId = document.getElementById('ct-module').value;
+            const type = document.getElementById('ct-type').value;
+            const titre = document.getElementById('ct-titre').value;
+            const texteContenu = document.getElementById('ct-texte').value || '';
+            try{
+                if (fileInput.files.length > 0) {
+                    const fd = new FormData();
+                    fd.append('moduleId', moduleId);
+                    fd.append('type', type);
+                    fd.append('titre', titre);
+                    fd.append('texteContenu', texteContenu);
+                    fd.append('fichier', fileInput.files[0]);
+                    const res = await fetch(`${API_URL}/admin/contenu`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${getToken()}` },
+                        body: fd
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.message || 'Erreur serveur');
+                } else {
+                    await api('/admin/contenu', {method:'POST', body:{
+                        moduleId, type, titre,
+                        fichier: document.getElementById('ct-fichier').value || null,
+                        texteContenu: texteContenu || null
+                    }});
+                }
+                e.target.reset(); loadAdmin();
+            } catch(e){ alert(e.message); }
+        }
+        async function deleteContenu(id){
+            if (!confirm('Supprimer ce contenu ?')) return;
+            try{ await api(`/admin/contenu/${id}`, {method:'DELETE'}); loadAdmin(); } catch(e){ alert(e.message); }
+        }
+        async function createQuiz(e){
+            e.preventDefault();
+            try{
+                const result = await api('/admin/quiz', {method:'POST', body:{
+                    moduleId: document.getElementById('qz-module').value,
+                    titre: document.getElementById('qz-titre').value,
+                    description: document.getElementById('qz-desc').value,
+                    seuilReussite: parseInt(document.getElementById('qz-seuil').value) || 70
+                }});
+                e.target.reset();
+                await loadAdmin();
+                document.getElementById('qs-quiz-select').value = result.quizId;
+                loadQuestions();
+                window.scrollTo({top: document.getElementById('create-question-form').offsetTop - 100, behavior: 'smooth'});
+            } catch(e){ alert(e.message); }
+        }
+        async function deleteQuiz(id){
+            if (!confirm('Supprimer ce quiz et ses questions ?')) return;
+            try{ await api(`/admin/quiz/${id}`, {method:'DELETE'}); loadAdmin(); } catch(e){ alert(e.message); }
+        }
+        async function deleteUser(id){
+            if (!confirm('Supprimer ce compte utilisateur et toutes ses données (progression, badges...) ?')) return;
+            try{ await api(`/admin/utilisateur/${id}`, {method:'DELETE'}); loadAdmin(); } catch(e){ alert(e.message); }
+        }
+        function toggleQuestionType(){
+            const isQCM = document.getElementById('qs-type').value === 'QCM';
+            document.getElementById('qs-reponses-qcm').classList.toggle('hidden', !isQCM);
+            document.getElementById('qs-reponses-vf').classList.toggle('hidden', isQCM);
+        }
+        async function loadQuestions(){
+            const quizId = document.getElementById('qs-quiz-select').value;
+            if (!quizId) { document.getElementById('questions-list').innerHTML = ''; return; }
+            try{
+                const questions = await api(`/admin/questions?quizId=${quizId}`);
+                document.getElementById('questions-list').innerHTML = questions.length ? `<table class="fr-table"><thead><tr><th>Question</th><th>Type</th><th>Réponses</th><th></th></tr></thead><tbody>
+                    ${questions.map(q=>`<tr><td>${q.texte}</td><td>${q.type}</td><td>${q.reponses.map(r=>r.estCorrecte?`<strong>${r.texte} ✓</strong>`:r.texte).join(', ')}</td><td><button class="fr-btn fr-btn--secondary" onclick="deleteQuestion(${q.id})">Supprimer</button></td></tr>`).join('')}
+                </tbody></table>` : '<p>Aucune question pour ce quiz pour le moment.</p>';
+            } catch(e){ console.error(e); }
+        }
+        async function createQuestion(e){
+            e.preventDefault();
+            const type = document.getElementById('qs-type').value;
+            let reponses;
+            if (type === 'QCM') {
+                const correcteIdx = parseInt(document.querySelector('input[name="qs-correcte"]:checked').value);
+                reponses = [0,1,2,3]
+                    .map(i => ({ texte: document.getElementById(`qs-rep-${i}`).value.trim(), estCorrecte: i === correcteIdx }))
+                    .filter(r => r.texte !== '');
+            } else {
+                const correcteVal = document.querySelector('input[name="qs-correcte-vf"]:checked').value;
+                reponses = [
+                    { texte: 'Vrai', estCorrecte: correcteVal === 'vrai' },
+                    { texte: 'Faux', estCorrecte: correcteVal === 'faux' }
+                ];
+            }
+            try{
+                await api('/admin/question', {method:'POST', body:{
+                    quizId: document.getElementById('qs-quiz-select').value,
+                    texte: document.getElementById('qs-texte').value,
+                    type,
+                    points: parseInt(document.getElementById('qs-points').value) || 1,
+                    ordre: 0,
+                    reponses
+                }});
+                e.target.reset();
+                toggleQuestionType();
+                loadQuestions();
+            } catch(e){ alert(e.message); }
+        }
+        async function deleteQuestion(id){
+            if (!confirm('Supprimer cette question ?')) return;
+            try{ await api(`/admin/question/${id}`, {method:'DELETE'}); loadQuestions(); } catch(e){ alert(e.message); }
+        }
+        async function resolveTicket(id){
+            try{ await api(`/support/${id}`, {method:'PUT', body:{statut:'Résolu'}}); loadAdmin(); } catch(e){ alert(e.message); }
+        }
+        loadAdmin();
+    </script>
+</body>
+</html>
