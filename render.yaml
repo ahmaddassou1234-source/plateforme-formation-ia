@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: plateforme-formation-ia
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: JWT_SECRET
+        sync: false
+      - key: NODE_VERSION
+        value: 20.11.0

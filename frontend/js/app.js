@@ -1,4 +1,16 @@
-const API_URL = 'http://localhost:3000/api';
+// En local (serveur Express sur localhost:3000) → API locale.
+// Sur GitHub Pages → API distante hébergée sur Render.
+// Sinon (ex: le backend Render sert lui-même ce frontend) → API sur la même origine.
+const API_URL = (() => {
+    const host = window.location.hostname;
+    if (host === 'ahmaddassou1234-source.github.io') {
+        return 'https://plateforme-formation-ia.onrender.com/api';
+    }
+    if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:3000/api';
+    }
+    return `${window.location.protocol}//${window.location.host}/api`;
+})();
 
 // --- Identité institutionnelle commune à toutes les pages ---
 function injectChrome() {

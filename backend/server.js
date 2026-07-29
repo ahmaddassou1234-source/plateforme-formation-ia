@@ -3,11 +3,20 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const db = require('./db');
+const { initDb } = require('./scripts/init-db');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Origines autorisées à appeler l'API (le frontend hébergé sur GitHub Pages + le dev local)
+const ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'https://ahmaddassou1234-source.github.io'
+];
+
 // Middleware
-app.use(cors());
+app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -41,9 +50,26 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Erreur serveur interne', error: err.message });
 });
 
-app.listen(PORT, () => {
-    console.log(`🎓 Plateforme Formation IA - Serveur démarré sur le port ${PORT}`);
-    console.log(`📚 Accès : http://localhost:${PORT}`);
+// Démarrage : sur un disque éphémère (ex. Render), la base SQLite n'existe pas
+// encore au premier déploiement — on (re)crée alors le schéma et les données de test.
+async function start() {
+    const table = await db.getAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='utilisateur'"
+    );
+    if (!table) {
+        console.log('🗄️  Base de données vide — initialisation automatique du schéma et des données de test...');
+        await initDb();
+    }
+
+    app.listen(PORT, () => {
+        console.log(`🎓 Plateforme Formation IA - Serveur démarré sur le port ${PORT}`);
+        console.log(`📚 Accès : http://localhost:${PORT}`);
+    });
+}
+
+start().catch((err) => {
+    console.error('❌ Échec du démarrage du serveur:', err.message);
+    process.exit(1);
 });
 
 module.exports = app;
