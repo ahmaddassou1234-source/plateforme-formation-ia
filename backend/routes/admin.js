@@ -93,7 +93,9 @@ router.get('/utilisateurs', async (req, res) => {
     try {
         const utilisateurs = await db.allAsync(`
             SELECT u.id, u.nom, u.email, u.role, u.dateCreation,
-                   e.arefId, e.matricule, et.nom as etablissementNom
+                   e.arefId, e.matricule, et.nom as etablissementNom,
+                   (SELECT COUNT(*) FROM progression p WHERE p.enseignantId = u.id AND p.statut = 'Terminé') as nbModulesTermines,
+                   (SELECT ROUND(AVG(p.score)) FROM progression p WHERE p.enseignantId = u.id AND p.statut = 'Terminé') as moyenneScore
             FROM utilisateur u
             LEFT JOIN enseignant e ON u.id = e.utilisateurId
             LEFT JOIN etablissement et ON e.etablissementId = et.id
@@ -118,6 +120,9 @@ router.post('/utilisateur', async (req, res) => {
         }
         if (motDePasse.length < 6) {
             return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères' });
+        }
+        if (role === 'Enseignant' && !etablissementId) {
+            return res.status(400).json({ message: 'L\'établissement (et donc la région/AREF) est obligatoire pour un enseignant' });
         }
 
         const existing = await db.getAsync('SELECT id FROM utilisateur WHERE email = ?', [email]);

@@ -150,7 +150,8 @@
                     <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group"><label class="fr-label">Nom complet</label><input type="text" id="usr-nom" class="fr-input" required></div></div>
                     <div class="fr-col-12 fr-col-md-4"><div class="fr-form-group"><label class="fr-label">Email</label><input type="email" id="usr-email" class="fr-input" required></div></div>
                     <div class="fr-col-12 fr-col-md-2"><div class="fr-form-group"><label class="fr-label">Mot de passe initial</label><input type="text" id="usr-motdepasse" class="fr-input" placeholder="Min. 6 caractères" required minlength="6"></div></div>
-                    <div class="fr-col-12 fr-col-md-2"><div class="fr-form-group"><label class="fr-label">Rôle</label><select id="usr-role" class="fr-select"><option value="Enseignant">Enseignant</option><option value="Administrateur">Administrateur</option></select></div></div>
+                    <div class="fr-col-12 fr-col-md-2"><div class="fr-form-group"><label class="fr-label">Rôle</label><select id="usr-role" class="fr-select" onchange="toggleUserRoleFields()"><option value="Enseignant">Enseignant</option><option value="Administrateur">Administrateur</option></select></div></div>
+                    <div class="fr-col-12 fr-col-md-4" id="usr-etablissement-group"><div class="fr-form-group"><label class="fr-label">Établissement (détermine la région/AREF)</label><select id="usr-etablissement" class="fr-select" required></select></div></div>
                 </div>
                 <button type="submit" class="fr-btn">Créer l'utilisateur</button>
             </form>
@@ -163,6 +164,19 @@
         requireAuth(); requireAdmin(); updateHeader();
         let modulesCache = [];
         let quizzesCache = [];
+        let etablissementsCache = [];
+
+        function toggleUserRoleFields() {
+            const isEnseignant = document.getElementById('usr-role').value === 'Enseignant';
+            document.getElementById('usr-etablissement-group').classList.toggle('hidden', !isEnseignant);
+            document.getElementById('usr-etablissement').required = isEnseignant;
+        }
+
+        async function loadEtablissements() {
+            etablissementsCache = await api('/auth/etablissements');
+            document.getElementById('usr-etablissement').innerHTML = etablissementsCache
+                .map(e => `<option value="${e.id}">${e.nom} — ${e.arefId} (${e.zone})</option>`).join('');
+        }
 
         async function loadAdmin() {
             try {
@@ -214,8 +228,8 @@
                 </tbody></table>` : '<p>Aucun message pour le moment.</p>';
 
                 const users = await api('/admin/utilisateurs');
-                document.getElementById('users-list').innerHTML = `<table class="fr-table"><thead><tr><th>Matricule</th><th>Nom</th><th>Email</th><th>Rôle</th><th>Établissement</th><th>Inscription</th><th></th></tr></thead><tbody>
-                    ${users.map(u=>`<tr><td>${u.matricule||'-'}</td><td>${u.nom}</td><td>${u.email}</td><td><span class="fr-badge">${u.role}</span></td><td>${u.etablissementNom||'-'}</td><td>${new Date(u.dateCreation).toLocaleDateString('fr-FR')}</td><td>
+                document.getElementById('users-list').innerHTML = `<table class="fr-table"><thead><tr><th>Matricule</th><th>Nom</th><th>Email</th><th>Rôle</th><th>Établissement</th><th>Progression</th><th>Inscription</th><th></th></tr></thead><tbody>
+                    ${users.map(u=>`<tr><td>${u.matricule||'-'}</td><td>${u.nom}</td><td>${u.email}</td><td><span class="fr-badge">${u.role}</span></td><td>${u.etablissementNom||'-'}</td><td>${u.role==='Enseignant'?`${u.nbModulesTermines} module(s) terminé(s)${u.moyenneScore!==null?` • moyenne ${u.moyenneScore}%`:''}`:'-'}</td><td>${new Date(u.dateCreation).toLocaleDateString('fr-FR')}</td><td>
                         <button class="fr-btn fr-btn--secondary" onclick="resetUserPassword(${u.id})">Réinitialiser mot de passe</button>
                         <button class="fr-btn fr-btn--secondary" onclick="deleteUser(${u.id})">Supprimer</button>
                     </td></tr>`).join('')}
@@ -347,14 +361,20 @@
         }
         async function createUser(e){
             e.preventDefault();
+            const role = document.getElementById('usr-role').value;
+            const etablissementId = document.getElementById('usr-etablissement').value || null;
+            const etablissement = etablissementsCache.find(et => String(et.id) === String(etablissementId));
             try{
                 await api('/admin/utilisateur', {method:'POST', body:{
                     nom: document.getElementById('usr-nom').value,
                     email: document.getElementById('usr-email').value,
                     motDePasse: document.getElementById('usr-motdepasse').value,
-                    role: document.getElementById('usr-role').value
+                    role,
+                    etablissementId: role === 'Enseignant' ? etablissementId : null,
+                    arefId: role === 'Enseignant' ? (etablissement?.arefId || null) : null
                 }});
                 e.target.reset();
+                toggleUserRoleFields();
                 loadAdmin();
             } catch(e){ alert(e.message); }
         }
@@ -411,6 +431,8 @@
             try{ await api(`/support/${id}`, {method:'PUT', body:{statut:'Résolu'}}); loadAdmin(); } catch(e){ alert(e.message); }
         }
         loadAdmin();
+        loadEtablissements();
+        toggleUserRoleFields();
     </script>
 </body>
 </html>
