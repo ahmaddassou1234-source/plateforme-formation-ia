@@ -69,6 +69,31 @@ async function ensureMatriculeColumn() {
     console.log(`✅ Migration terminée (${enseignants.length} matricule(s) attribué(s))`);
 }
 
+// Migration légère : les premières versions du schéma imposaient arefId UNIQUE sur
+// etablissement, limitant à un seul établissement par région. On reconstruit la table
+// sans cette contrainte (ALTER TABLE ne permet pas de retirer une contrainte en SQLite).
+async function ensureEtablissementArefNotUnique() {
+    const table = await db.getAsync("SELECT sql FROM sqlite_master WHERE type='table' AND name='etablissement'");
+    if (!table || !table.sql.includes('arefId TEXT UNIQUE')) return;
+
+    console.log('🔧 Migration : suppression de la contrainte UNIQUE sur etablissement.arefId...');
+    await db.runAsync('PRAGMA foreign_keys = OFF');
+    await db.execAsync(`
+        CREATE TABLE etablissement_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT NOT NULL,
+            type TEXT NOT NULL CHECK(type IN ('École', 'Collège', 'Lycée', 'Université', 'Autre')),
+            zone TEXT NOT NULL,
+            arefId TEXT NOT NULL
+        );
+        INSERT INTO etablissement_new (id, nom, type, zone, arefId) SELECT id, nom, type, zone, arefId FROM etablissement;
+        DROP TABLE etablissement;
+        ALTER TABLE etablissement_new RENAME TO etablissement;
+    `);
+    await db.runAsync('PRAGMA foreign_keys = ON');
+    console.log('✅ Migration terminée');
+}
+
 // Démarrage : sur un disque éphémère (ex. Render), la base SQLite n'existe pas
 // encore au premier déploiement — on (re)crée alors le schéma et les données de test.
 async function start() {
@@ -80,6 +105,7 @@ async function start() {
         await initDb();
     } else {
         await ensureMatriculeColumn();
+        await ensureEtablissementArefNotUnique();
     }
 
     app.listen(PORT, () => {

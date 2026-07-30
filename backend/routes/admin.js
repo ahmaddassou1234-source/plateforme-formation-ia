@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { genererMatricule } = require('../utils/matricule');
+const { AREFS } = require('../utils/arefs');
 
 const router = express.Router();
 
@@ -110,7 +111,7 @@ router.get('/utilisateurs', async (req, res) => {
 // Créer un compte utilisateur (Enseignant ou Administrateur)
 router.post('/utilisateur', async (req, res) => {
     try {
-        const { nom, email, motDePasse, role, etablissementId, arefId, niveauEnseigne } = req.body;
+        const { nom, email, motDePasse, role, region, etablissementNom, niveauEnseigne } = req.body;
 
         if (!nom || !email || !motDePasse || !role) {
             return res.status(400).json({ message: 'Nom, email, mot de passe et rôle sont obligatoires' });
@@ -121,8 +122,15 @@ router.post('/utilisateur', async (req, res) => {
         if (motDePasse.length < 6) {
             return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères' });
         }
-        if (role === 'Enseignant' && !etablissementId) {
-            return res.status(400).json({ message: 'L\'établissement (et donc la région/AREF) est obligatoire pour un enseignant' });
+
+        const aref = AREFS.find(a => a.code === region);
+        if (role === 'Enseignant') {
+            if (!aref) {
+                return res.status(400).json({ message: 'La région (AREF) est obligatoire et doit être valide' });
+            }
+            if (!etablissementNom || !etablissementNom.trim()) {
+                return res.status(400).json({ message: 'Le nom de l\'établissement est obligatoire' });
+            }
         }
 
         const existing = await db.getAsync('SELECT id FROM utilisateur WHERE email = ?', [email]);
@@ -138,14 +146,34 @@ router.post('/utilisateur', async (req, res) => {
         const userId = result.id;
         let matricule = null;
 
-        if (role === 'Enseignant') {
-            matricule = await genererMatricule();
-            await db.runAsync(
-                'INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne, matricule) VALUES (?, ?, ?, ?, ?)',
-                [userId, etablissementId || null, arefId || null, niveauEnseigne || null, matricule]
-            );
-        } else {
-            await db.runAsync('INSERT INTO administrateur (utilisateurId) VALUES (?)', [userId]);
+        // Si la création du profil (enseignant/administrateur) échoue, on supprime le
+        // compte utilisateur déjà créé pour ne pas laisser un compte orphelin/bloquant.
+        try {
+            if (role === 'Enseignant') {
+                // Réutilise l'établissement s'il existe déjà dans cette région, sinon le crée à la volée.
+                let etablissement = await db.getAsync(
+                    'SELECT id FROM etablissement WHERE nom = ? AND arefId = ?',
+                    [etablissementNom.trim(), aref.code]
+                );
+                if (!etablissement) {
+                    const etabResult = await db.runAsync(
+                        'INSERT INTO etablissement (nom, type, zone, arefId) VALUES (?, ?, ?, ?)',
+                        [etablissementNom.trim(), 'Autre', aref.nom, aref.code]
+                    );
+                    etablissement = { id: etabResult.id };
+                }
+
+                matricule = await genererMatricule();
+                await db.runAsync(
+                    'INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne, matricule) VALUES (?, ?, ?, ?, ?)',
+                    [userId, etablissement.id, aref.code, niveauEnseigne || null, matricule]
+                );
+            } else {
+                await db.runAsync('INSERT INTO administrateur (utilisateurId) VALUES (?)', [userId]);
+            }
+        } catch (profileError) {
+            await db.runAsync('DELETE FROM utilisateur WHERE id = ?', [userId]);
+            throw profileError;
         }
 
         res.status(201).json({ message: 'Utilisateur créé', userId, matricule });

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS etablissement (
     nom TEXT NOT NULL,
     type TEXT NOT NULL CHECK(type IN ('École', 'Collège', 'Lycée', 'Université', 'Autre')),
     zone TEXT NOT NULL,
-    arefId TEXT UNIQUE NOT NULL
+    arefId TEXT NOT NULL -- plusieurs établissements peuvent appartenir à la même région (AREF)
 );
 
 -- Table des utilisateurs (classe mère)

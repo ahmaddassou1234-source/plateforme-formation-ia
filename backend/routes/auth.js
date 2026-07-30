@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { JWT_SECRET } = require('../middleware/auth');
 const { genererMatricule } = require('../utils/matricule');
+const { AREFS } = require('../utils/arefs');
 
 const router = express.Router();
 
@@ -154,6 +155,11 @@ router.get('/etablissements', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }
+});
+
+// Liste des 12 AREF (régions) du Maroc
+router.get('/arefs', (req, res) => {
+    res.json(AREFS);
 });
 
 module.exports = router;
