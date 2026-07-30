@@ -24,9 +24,7 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Identifiants incorrects' });
         }
 
-        // Vérification du mot de passe (comparaison simple pour la démo)
-        // En production, utiliser bcrypt.compare
-        const validPassword = await bcrypt.compare(motDePasse, user.motDePasse) || motDePasse === 'password123';
+        const validPassword = await bcrypt.compare(motDePasse, user.motDePasse);
 
         if (!validPassword) {
             return res.status(401).json({ message: 'Identifiants incorrects' });

@@ -1,7 +1,9 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
@@ -114,6 +116,30 @@ router.delete('/utilisateur/:id', async (req, res) => {
             return res.status(404).json({ message: 'Utilisateur introuvable' });
         }
         res.json({ message: 'Utilisateur supprimé' });
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    }
+});
+
+// Réinitialiser le mot de passe d'un compte : génère un mot de passe temporaire,
+// le hash avant stockage, et le renvoie une seule fois (non récupérable ensuite).
+router.post('/utilisateur/:id/reset-password', async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const user = await db.getAsync('SELECT id FROM utilisateur WHERE id = ?', [id]);
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur introuvable' });
+        }
+
+        const tempPassword = crypto.randomBytes(9).toString('base64url');
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+        await db.runAsync('UPDATE utilisateur SET motDePasse = ? WHERE id = ?', [hashedPassword, id]);
+
+        res.json({
+            message: 'Mot de passe réinitialisé',
+            motDePasseTemporaire: tempPassword
+        });
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }

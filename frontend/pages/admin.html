@@ -203,7 +203,10 @@
 
                 const users = await api('/admin/utilisateurs');
                 document.getElementById('users-list').innerHTML = `<table class="fr-table"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Établissement</th><th>Inscription</th><th></th></tr></thead><tbody>
-                    ${users.map(u=>`<tr><td>${u.nom}</td><td>${u.email}</td><td><span class="fr-badge">${u.role}</span></td><td>${u.etablissementNom||'-'}</td><td>${new Date(u.dateCreation).toLocaleDateString('fr-FR')}</td><td><button class="fr-btn fr-btn--secondary" onclick="deleteUser(${u.id})">Supprimer</button></td></tr>`).join('')}
+                    ${users.map(u=>`<tr><td>${u.nom}</td><td>${u.email}</td><td><span class="fr-badge">${u.role}</span></td><td>${u.etablissementNom||'-'}</td><td>${new Date(u.dateCreation).toLocaleDateString('fr-FR')}</td><td>
+                        <button class="fr-btn fr-btn--secondary" onclick="resetUserPassword(${u.id})">Réinitialiser mot de passe</button>
+                        <button class="fr-btn fr-btn--secondary" onclick="deleteUser(${u.id})">Supprimer</button>
+                    </td></tr>`).join('')}
                 </tbody></table>`;
             } catch(e){ console.error(e); }
         }
@@ -320,6 +323,13 @@
         async function deleteUser(id){
             if (!confirm('Supprimer ce compte utilisateur et toutes ses données (progression, badges...) ?')) return;
             try{ await api(`/admin/utilisateur/${id}`, {method:'DELETE'}); loadAdmin(); } catch(e){ alert(e.message); }
+        }
+        async function resetUserPassword(id){
+            if (!confirm("Générer un nouveau mot de passe temporaire pour ce compte ? L'ancien mot de passe cessera de fonctionner.")) return;
+            try{
+                const result = await api(`/admin/utilisateur/${id}/reset-password`, {method:'POST'});
+                alert(`Mot de passe temporaire (à communiquer à l'utilisateur, il ne sera plus jamais affiché) :\n\n${result.motDePasseTemporaire}`);
+            } catch(e){ alert(e.message); }
         }
         function toggleQuestionType(){
             const isQCM = document.getElementById('qs-type').value === 'QCM';
