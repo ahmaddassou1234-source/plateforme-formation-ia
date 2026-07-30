@@ -75,8 +75,6 @@ Les deux rôles de la plateforme peuvent être testés immédiatement avec les c
 |------|----------------------|---------------|-----------|
 | **Administrateur (DRPN)** | `admin.drpn@men.gov.ma` | `password123` | — |
 | **Enseignant(e)** | `a.dassou@men.gov.ma` | `password123` | `10000001` |
-| Enseignant(e) (compte secondaire) | `y.amrani@men.gov.ma` | `password123` | `10000002` |
-| Enseignant(e) (compte secondaire) | `k.bennani@men.gov.ma` | `password123` | `10000003` |
 
 Ces comptes sont pré-remplis et cliquables directement sur la page de connexion (`login.html`).
 
