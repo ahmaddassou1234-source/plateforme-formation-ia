@@ -7,7 +7,7 @@ const router = express.Router();
 // Récupérer tous les modules (catalogue)
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const { theme, niveau, search, mesCreations } = req.query;
+        const { theme, niveau, search } = req.query;
         let sql = `
             SELECT m.*, u.nom as createurNom,
                    (SELECT COUNT(*) FROM contenu WHERE moduleId = m.id) as nbContenus,
@@ -30,11 +30,6 @@ router.get('/', authenticateToken, async (req, res) => {
             sql += ' AND (m.titre LIKE ? OR m.description LIKE ?)';
             params.push(`%${search}%`, `%${search}%`);
         }
-        if (mesCreations) {
-            sql += ' AND m.estMiniFormation = 1 AND m.creePar = ?';
-            params.push(req.user.id);
-        }
-
         sql += ' ORDER BY m.dateCreation DESC';
 
         const modules = await db.allAsync(sql, params);
@@ -142,47 +137,15 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Créer une mini-formation (Enseignant uniquement) — Enseignant.creerMiniFormation()
-router.post('/mini-formation', authenticateToken, async (req, res) => {
-    try {
-        if (req.user.role !== 'Enseignant') {
-            return res.status(403).json({ message: 'Seuls les enseignants peuvent créer une mini-formation' });
-        }
-
-        const { titre, theme, description, contenuTexte } = req.body;
-        if (!titre || !theme || !description) {
-            return res.status(400).json({ message: 'Titre, thème et description sont obligatoires' });
-        }
-
-        const result = await db.runAsync(
-            `INSERT INTO moduleFormation (titre, theme, niveau, duree, roleCible, description, creePar, estMiniFormation)
-             VALUES (?, ?, 'Débutant', 30, 'Enseignant', ?, ?, 1)`,
-            [titre, theme, description, req.user.id]
-        );
-
-        if (contenuTexte) {
-            await db.runAsync(
-                `INSERT INTO contenu (moduleId, type, titre, ordre, texteContenu) VALUES (?, 'Texte', 'Contenu', 1, ?)`,
-                [result.id, contenuTexte]
-            );
-        }
-
-        res.status(201).json({ message: 'Mini-formation créée avec succès', moduleId: result.id });
-    } catch (error) {
-        res.status(500).json({ message: 'Erreur serveur', error: error.message });
-    }
-});
-
-// Mettre à jour un module (Admin, ou l'enseignant créateur pour sa mini-formation)
+// Mettre à jour un module (Admin uniquement — les enseignants ne créent/gèrent plus de formations)
 router.put('/:id', authenticateToken, async (req, res) => {
     try {
+        if (req.user.role !== 'Administrateur') {
+            return res.status(403).json({ message: 'Accès réservé aux administrateurs' });
+        }
+
         const module = await db.getAsync('SELECT * FROM moduleFormation WHERE id = ?', [req.params.id]);
         if (!module) return res.status(404).json({ message: 'Module non trouvé' });
-
-        const estProprietaire = module.estMiniFormation === 1 && module.creePar === req.user.id;
-        if (req.user.role !== 'Administrateur' && !estProprietaire) {
-            return res.status(403).json({ message: 'Accès refusé' });
-        }
 
         const { titre, theme, niveau, duree, roleCible, description } = req.body;
 
@@ -201,16 +164,15 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Supprimer un module (Admin, ou l'enseignant créateur pour sa mini-formation)
+// Supprimer un module (Admin uniquement)
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
+        if (req.user.role !== 'Administrateur') {
+            return res.status(403).json({ message: 'Accès réservé aux administrateurs' });
+        }
+
         const module = await db.getAsync('SELECT * FROM moduleFormation WHERE id = ?', [req.params.id]);
         if (!module) return res.status(404).json({ message: 'Module non trouvé' });
-
-        const estProprietaire = module.estMiniFormation === 1 && module.creePar === req.user.id;
-        if (req.user.role !== 'Administrateur' && !estProprietaire) {
-            return res.status(403).json({ message: 'Accès refusé' });
-        }
 
         await db.runAsync('DELETE FROM moduleFormation WHERE id = ?', [req.params.id]);
         res.json({ message: 'Module supprimé avec succès' });

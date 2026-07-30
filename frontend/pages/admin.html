@@ -214,8 +214,8 @@
                 </tbody></table>` : '<p>Aucun message pour le moment.</p>';
 
                 const users = await api('/admin/utilisateurs');
-                document.getElementById('users-list').innerHTML = `<table class="fr-table"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Établissement</th><th>Inscription</th><th></th></tr></thead><tbody>
-                    ${users.map(u=>`<tr><td>${u.nom}</td><td>${u.email}</td><td><span class="fr-badge">${u.role}</span></td><td>${u.etablissementNom||'-'}</td><td>${new Date(u.dateCreation).toLocaleDateString('fr-FR')}</td><td>
+                document.getElementById('users-list').innerHTML = `<table class="fr-table"><thead><tr><th>Matricule</th><th>Nom</th><th>Email</th><th>Rôle</th><th>Établissement</th><th>Inscription</th><th></th></tr></thead><tbody>
+                    ${users.map(u=>`<tr><td>${u.matricule||'-'}</td><td>${u.nom}</td><td>${u.email}</td><td><span class="fr-badge">${u.role}</span></td><td>${u.etablissementNom||'-'}</td><td>${new Date(u.dateCreation).toLocaleDateString('fr-FR')}</td><td>
                         <button class="fr-btn fr-btn--secondary" onclick="resetUserPassword(${u.id})">Réinitialiser mot de passe</button>
                         <button class="fr-btn fr-btn--secondary" onclick="deleteUser(${u.id})">Supprimer</button>
                     </td></tr>`).join('')}

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { JWT_SECRET } = require('../middleware/auth');
+const { genererMatricule } = require('../utils/matricule');
 
 const router = express.Router();
 
@@ -100,16 +101,18 @@ router.post('/register', async (req, res) => {
         );
 
         const userId = result.id;
+        const matricule = await genererMatricule();
 
         // Créer le profil enseignant
         await db.runAsync(
-            'INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne) VALUES (?, ?, ?, ?)',
-            [userId, etablissementId || null, arefId || null, niveauEnseigne || null]
+            'INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne, matricule) VALUES (?, ?, ?, ?, ?)',
+            [userId, etablissementId || null, arefId || null, niveauEnseigne || null, matricule]
         );
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: 'Compte enseignant créé avec succès',
-            userId 
+            userId,
+            matricule
         });
     } catch (error) {
         console.error('Erreur register:', error);

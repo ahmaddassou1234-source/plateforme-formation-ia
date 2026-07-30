@@ -24,10 +24,10 @@ INSERT INTO utilisateur (nom, email, motDePasse, role) VALUES
 ('Khadija Bennani', 'k.bennani@men.gov.ma', '$2b$10$bG3n0GIqtVANEaqDF3QO5u9wBPDVWVbM.G5Qa.cNlJx.TjXkGHWei', 'Enseignant');
 
 -- Profils Enseignants
-INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne) VALUES
-(2, 1, 'AREF-RSK-001', 'Lycée'),
-(3, 2, 'AREF-CS-002', 'Collège'),
-(4, 1, 'AREF-RSK-001', 'Lycée');
+INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne, matricule) VALUES
+(2, 1, 'AREF-RSK-001', 'Lycée', '10000001'),
+(3, 2, 'AREF-CS-002', 'Collège', '10000002'),
+(4, 1, 'AREF-RSK-001', 'Lycée', '10000003');
 
 -- Profil Administrateur (DRPN)
 INSERT INTO administrateur (utilisateurId) VALUES

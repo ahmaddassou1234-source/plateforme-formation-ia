@@ -50,6 +50,25 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Erreur serveur interne', error: err.message });
 });
 
+// Migration légère pour les bases créées avant l'ajout du matricule enseignant
+// (SQLite ne permet pas d'ajouter une contrainte UNIQUE via ALTER TABLE, d'où
+// l'unicité assurée uniquement par la génération séquentielle ici).
+async function ensureMatriculeColumn() {
+    const columns = await db.allAsync('PRAGMA table_info(enseignant)');
+    if (columns.some((c) => c.name === 'matricule')) return;
+
+    console.log('🔧 Migration : ajout du matricule enseignant...');
+    await db.runAsync('ALTER TABLE enseignant ADD COLUMN matricule TEXT');
+
+    const enseignants = await db.allAsync('SELECT utilisateurId FROM enseignant ORDER BY utilisateurId');
+    let next = 10000001;
+    for (const e of enseignants) {
+        await db.runAsync('UPDATE enseignant SET matricule = ? WHERE utilisateurId = ?', [String(next), e.utilisateurId]);
+        next++;
+    }
+    console.log(`✅ Migration terminée (${enseignants.length} matricule(s) attribué(s))`);
+}
+
 // Démarrage : sur un disque éphémère (ex. Render), la base SQLite n'existe pas
 // encore au premier déploiement — on (re)crée alors le schéma et les données de test.
 async function start() {
@@ -59,6 +78,8 @@ async function start() {
     if (!table) {
         console.log('🗄️  Base de données vide — initialisation automatique du schéma et des données de test...');
         await initDb();
+    } else {
+        await ensureMatriculeColumn();
     }
 
     app.listen(PORT, () => {

@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS enseignant (
     etablissementId INTEGER,
     arefId TEXT,
     niveauEnseigne TEXT,
+    matricule TEXT UNIQUE, -- identifiant à 8 chiffres commençant par 1 (ex. 10000001)
     FOREIGN KEY (utilisateurId) REFERENCES utilisateur(id) ON DELETE CASCADE,
     FOREIGN KEY (etablissementId) REFERENCES etablissement(id)
 );

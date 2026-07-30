@@ -6,6 +6,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { genererMatricule } = require('../utils/matricule');
 
 const router = express.Router();
 
@@ -92,7 +93,7 @@ router.get('/utilisateurs', async (req, res) => {
     try {
         const utilisateurs = await db.allAsync(`
             SELECT u.id, u.nom, u.email, u.role, u.dateCreation,
-                   e.arefId, et.nom as etablissementNom
+                   e.arefId, e.matricule, et.nom as etablissementNom
             FROM utilisateur u
             LEFT JOIN enseignant e ON u.id = e.utilisateurId
             LEFT JOIN etablissement et ON e.etablissementId = et.id
@@ -130,17 +131,19 @@ router.post('/utilisateur', async (req, res) => {
             [nom, email, hashedPassword, role]
         );
         const userId = result.id;
+        let matricule = null;
 
         if (role === 'Enseignant') {
+            matricule = await genererMatricule();
             await db.runAsync(
-                'INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne) VALUES (?, ?, ?, ?)',
-                [userId, etablissementId || null, arefId || null, niveauEnseigne || null]
+                'INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne, matricule) VALUES (?, ?, ?, ?, ?)',
+                [userId, etablissementId || null, arefId || null, niveauEnseigne || null, matricule]
             );
         } else {
             await db.runAsync('INSERT INTO administrateur (utilisateurId) VALUES (?)', [userId]);
         }
 
-        res.status(201).json({ message: 'Utilisateur créé', userId });
+        res.status(201).json({ message: 'Utilisateur créé', userId, matricule });
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }

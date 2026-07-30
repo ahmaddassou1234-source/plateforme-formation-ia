@@ -71,12 +71,12 @@ La base de données SQLite (`database/plateforme_ia.db`) et le dossier `uploads/
 
 Les deux rôles de la plateforme peuvent être testés immédiatement avec les comptes suivants (mot de passe identique : `password123`) :
 
-| Rôle | Identifiant (email) | Mot de passe |
-|------|----------------------|---------------|
-| **Administrateur (DRPN)** | `admin.drpn@men.gov.ma` | `password123` |
-| **Enseignant(e)** | `a.dassou@men.gov.ma` | `password123` |
-| Enseignant(e) (compte secondaire) | `y.amrani@men.gov.ma` | `password123` |
-| Enseignant(e) (compte secondaire) | `k.bennani@men.gov.ma` | `password123` |
+| Rôle | Identifiant (email) | Mot de passe | Matricule |
+|------|----------------------|---------------|-----------|
+| **Administrateur (DRPN)** | `admin.drpn@men.gov.ma` | `password123` | — |
+| **Enseignant(e)** | `a.dassou@men.gov.ma` | `password123` | `10000001` |
+| Enseignant(e) (compte secondaire) | `y.amrani@men.gov.ma` | `password123` | `10000002` |
+| Enseignant(e) (compte secondaire) | `k.bennani@men.gov.ma` | `password123` | `10000003` |
 
 Ces comptes sont pré-remplis et cliquables directement sur la page de connexion (`login.html`).
 
@@ -90,7 +90,6 @@ Ces comptes sont pré-remplis et cliquables directement sur la page de connexion
 - **Dépôt de contenus (PDF, vidéos, documents)** — associés à un module, stockés localement dans `uploads/`
 - **Quiz interactifs** — QCM, Vrai/Faux, calcul de score, seuil de réussite
 - **Système de badges** — attribution automatique liée à la complétion d'un module et au score (Pionnier IA, Expert Consignes, Marathonien...)
-- **Mini-formations entre pairs** — un enseignant peut créer un court support pour former ses collègues (`creerMiniFormation()`)
 - **Contact du support** — formulaire accessible depuis toutes les pages, avec suivi des tickets côté admin
 - **Espace administrateur (DRPN)** — gestion CRUD des modules/contenus/quiz, suivi du pilote national par AREF, gestion des utilisateurs et des tickets support
 - **Base SQLite locale** — tables relationnelles conformes au diagramme de classes UML (rôles Enseignant / Administrateur uniquement)
