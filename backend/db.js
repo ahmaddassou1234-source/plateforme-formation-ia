@@ -1,50 +1,53 @@
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const { createClient } = require('@libsql/client');
 
-const dbPath = process.env.DB_PATH || path.join(__dirname, '../database/plateforme_ia.db');
-const dbDir = path.dirname(dbPath);
-
-// Créer le dossier database s'il n'existe pas
-if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+// Sans identifiants Turso : fichier SQLite local (comportement inchangé en dev).
+// Avec TURSO_DATABASE_URL + TURSO_AUTH_TOKEN : base distante persistante (production).
+const localDbPath = process.env.DB_PATH || path.join(__dirname, '../database/plateforme_ia.db');
+const localDbDir = path.dirname(localDbPath);
+if (!fs.existsSync(localDbDir)) {
+    fs.mkdirSync(localDbDir, { recursive: true });
 }
 
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('❌ Erreur de connexion à la base de données:', err.message);
-    } else {
-        console.log('✅ Connexion à la base de données SQLite établie');
-        db.run('PRAGMA foreign_keys = ON');
+const usingTurso = Boolean(process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
+
+const client = usingTurso
+    ? createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN })
+    : createClient({ url: `file:${localDbPath}` });
+
+console.log(usingTurso
+    ? '✅ Connexion à la base de données Turso établie'
+    : `✅ Connexion à la base de données SQLite locale établie (${localDbPath})`);
+
+// Normalise les lignes en objets simples (nécessaire pour le spread { ...row } utilisé par les routes)
+function toPlainRows(resultSet) {
+    return resultSet.rows.map((row) => {
+        const obj = {};
+        resultSet.columns.forEach((col) => { obj[col] = row[col]; });
+        return obj;
+    });
+}
+
+const db = {
+    async runAsync(sql, params = []) {
+        const rs = await client.execute({ sql, args: params });
+        return { id: Number(rs.lastInsertRowid ?? 0), changes: rs.rowsAffected };
+    },
+    async getAsync(sql, params = []) {
+        const rs = await client.execute({ sql, args: params });
+        return toPlainRows(rs)[0];
+    },
+    async allAsync(sql, params = []) {
+        const rs = await client.execute({ sql, args: params });
+        return toPlainRows(rs);
+    },
+    // Exécute un script SQL contenant plusieurs instructions séparées par ';' (schema.sql, seed.sql)
+    async execAsync(sql) {
+        await client.executeMultiple(sql);
     }
-});
-
-// Promisify pour utiliser async/await
-db.runAsync = function(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        this.run(sql, params, function(err) {
-            if (err) reject(err);
-            else resolve({ id: this.lastID, changes: this.changes });
-        });
-    });
 };
 
-db.getAsync = function(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        this.get(sql, params, (err, row) => {
-            if (err) reject(err);
-            else resolve(row);
-        });
-    });
-};
-
-db.allAsync = function(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        this.all(sql, params, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-        });
-    });
-};
+db.runAsync('PRAGMA foreign_keys = ON').catch(() => {});
 
 module.exports = db;
