@@ -104,6 +104,48 @@ router.get('/utilisateurs', async (req, res) => {
     }
 });
 
+// Créer un compte utilisateur (Enseignant ou Administrateur)
+router.post('/utilisateur', async (req, res) => {
+    try {
+        const { nom, email, motDePasse, role, etablissementId, arefId, niveauEnseigne } = req.body;
+
+        if (!nom || !email || !motDePasse || !role) {
+            return res.status(400).json({ message: 'Nom, email, mot de passe et rôle sont obligatoires' });
+        }
+        if (!['Enseignant', 'Administrateur'].includes(role)) {
+            return res.status(400).json({ message: 'Rôle invalide' });
+        }
+        if (motDePasse.length < 6) {
+            return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères' });
+        }
+
+        const existing = await db.getAsync('SELECT id FROM utilisateur WHERE email = ?', [email]);
+        if (existing) {
+            return res.status(409).json({ message: 'Cet email est déjà utilisé' });
+        }
+
+        const hashedPassword = await bcrypt.hash(motDePasse, 10);
+        const result = await db.runAsync(
+            'INSERT INTO utilisateur (nom, email, motDePasse, role) VALUES (?, ?, ?, ?)',
+            [nom, email, hashedPassword, role]
+        );
+        const userId = result.id;
+
+        if (role === 'Enseignant') {
+            await db.runAsync(
+                'INSERT INTO enseignant (utilisateurId, etablissementId, arefId, niveauEnseigne) VALUES (?, ?, ?, ?)',
+                [userId, etablissementId || null, arefId || null, niveauEnseigne || null]
+            );
+        } else {
+            await db.runAsync('INSERT INTO administrateur (utilisateurId) VALUES (?)', [userId]);
+        }
+
+        res.status(201).json({ message: 'Utilisateur créé', userId });
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    }
+});
+
 // Supprimer un compte utilisateur
 router.delete('/utilisateur/:id', async (req, res) => {
     try {
@@ -121,24 +163,31 @@ router.delete('/utilisateur/:id', async (req, res) => {
     }
 });
 
-// Réinitialiser le mot de passe d'un compte : génère un mot de passe temporaire,
-// le hash avant stockage, et le renvoie une seule fois (non récupérable ensuite).
+// Réinitialiser le mot de passe d'un compte. Si `nouveauMotDePasse` est fourni,
+// l'admin le définit manuellement ; sinon un mot de passe temporaire est généré.
+// Dans les deux cas il est hashé avant stockage et renvoyé une seule fois (non récupérable ensuite).
 router.post('/utilisateur/:id/reset-password', async (req, res) => {
     try {
         const id = Number(req.params.id);
+        const { nouveauMotDePasse } = req.body;
+
         const user = await db.getAsync('SELECT id FROM utilisateur WHERE id = ?', [id]);
         if (!user) {
             return res.status(404).json({ message: 'Utilisateur introuvable' });
         }
 
-        const tempPassword = crypto.randomBytes(9).toString('base64url');
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        if (nouveauMotDePasse && nouveauMotDePasse.length < 6) {
+            return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères' });
+        }
+
+        const newPassword = nouveauMotDePasse || crypto.randomBytes(9).toString('base64url');
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await db.runAsync('UPDATE utilisateur SET motDePasse = ? WHERE id = ?', [hashedPassword, id]);
 
         res.json({
             message: 'Mot de passe réinitialisé',
-            motDePasseTemporaire: tempPassword
+            motDePasseTemporaire: newPassword
         });
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error: error.message });
