@@ -23,9 +23,6 @@
         <p style="margin-bottom:2rem">Gérez les contenus de la plateforme et suivez le pilote national de la formation des enseignants à l'IA.</p>
         <div id="stats-admin" class="fr-grid-row fr-grid-row--gutters fr-mb-2w"></div>
 
-        <h2 class="fr-mb-2w">Suivi du pilote national — par AREF</h2>
-        <div id="pilote-national" class="fr-mb-2w"></div>
-
         <h2 class="fr-mb-2w">1. Créer un module de formation</h2>
         <p class="admin-help">Un module est le conteneur principal d'une formation (ex. "Introduction à l'IA générative"). Une fois créé, ajoutez-lui du contenu pédagogique puis un quiz ci-dessous.</p>
         <div class="fr-card fr-mb-2w"><div class="fr-card__body">
@@ -187,14 +184,8 @@
                     <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalUtilisateurs}</div><div class="stat-card__label">Utilisateurs</div></div></div>
                     <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalEnseignants}</div><div class="stat-card__label">Enseignants</div></div></div>
                     <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalModules}</div><div class="stat-card__label">Modules officiels</div></div></div>
-                    <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalMiniFormations}</div><div class="stat-card__label">Mini-formations</div></div></div>
                     <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.totalCompletions}</div><div class="stat-card__label">Complétions</div></div></div>
                     <div class="fr-col-12 fr-col-md-2"><div class="stat-card"><div class="stat-card__value">${data.stats.ticketsOuverts}</div><div class="stat-card__label">Tickets ouverts</div></div></div>`;
-
-                const pilote = await api('/admin/pilote-national');
-                document.getElementById('pilote-national').innerHTML = `<table class="fr-table"><thead><tr><th>AREF</th><th>Enseignants</th><th>Établissements</th><th>Modules terminés</th><th>Score moyen</th></tr></thead><tbody>
-                    ${pilote.parAref.map(a=>`<tr><td>${a.arefId}</td><td>${a.nbEnseignants}</td><td>${a.nbEtablissements}</td><td>${a.nbCompletions}</td><td>${a.moyenneScore!==null?a.moyenneScore+'%':'-'}</td></tr>`).join('')}
-                </tbody></table>`;
 
                 modulesCache = await api('/modules');
                 document.getElementById('modules-list').innerHTML = `<table class="fr-table"><thead><tr><th>Titre</th><th>Type</th><th>Créateur</th><th>Niveau</th><th></th></tr></thead><tbody>
